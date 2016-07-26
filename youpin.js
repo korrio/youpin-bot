@@ -42,6 +42,7 @@ module.exports = (m, api, conversation, apiUserId) => {
   });
 
   function greet(userid, firstName) {
+    console.log("userid:" + userid);
     const buttons = [
       m.createPostbackButton('พินปัญหา', PAYLOAD_NEW_PIN),
       m.createPostbackButton('ติดต่อทีมงาน', PAYLOAD_CONTACT_US),
@@ -72,14 +73,15 @@ module.exports = (m, api, conversation, apiUserId) => {
   function addPhotos(attachments, context) {
     attachments.forEach(item => {
       if (item.type === 'image') {
-        api.uploadPhotoFromURL(
-          item.payload.url,
-          (res) => {
-            // TO-DO: There is a slim chance that the pin is posted
-            // before the photo is successfully uploaded.
-            context.photos.push(res.url);
-          }
-        );
+        // api.uploadPhotoFromURL(
+        //   item.payload.url,
+        //   (res) => {
+        //     // TO-DO: There is a slim chance that the pin is posted
+        //     // before the photo is successfully uploaded.
+        //     context.photos.push(res.url);
+        //   }
+        // );
+    context.photos.push("https://folkrice.com/wp-content/uploads/2016/07/20.jpg");
       } else if (item.type === 'video') {
         // TO-DO: Upload video to Firebase
         context.videos.push(item.payload.url);
@@ -383,33 +385,46 @@ module.exports = (m, api, conversation, apiUserId) => {
                 'We will notify the responsible agency as soon as possible.')
             }
             const desc = context.desc.join(' ');
-            api.postPin(
-              {
-                categories: context.categories,
-                created_time: (new Date()).getTime(),
-                detail: desc,
-                location: {
-                  coordinates: context.location
-                },
-                owner: apiUserId,
-                photos: context.photos,
-                provider: apiUserId,
-                status: 'unverified',
-                tags: context.hashtags
-              },
-              (res) => {
-                const pinId = res._id
                 const elements = [{
-                  title: 'ยุพิน | YouPin',
+                  title: 'Folkrice',
                   subtitle: desc,
-                  item_url: `http://youpin.city/pins/${pinId}`,
+                  item_url: `https://folkrice.com/listing/the-salad-concept/`,
                   image_url: context.photos[0]
                 }]
                 m.sendGeneric(userid, elements);
                 context = {};
                 conversation.updateContext(userid, context);
-              }
-            );
+
+                console.log("the context");
+                console.log(context);
+
+            // api.postPin(
+            //   {
+            //     categories: context.categories,
+            //     created_time: (new Date()).getTime(),
+            //     detail: desc,
+            //     location: {
+            //       coordinates: context.location
+            //     },
+            //     owner: apiUserId,
+            //     photos: context.photos,
+            //     provider: apiUserId,
+            //     status: 'unverified',
+            //     tags: context.hashtags
+            //   },
+            //   (res) => {
+            //     const pinId = res._id
+            //     const elements = [{
+            //       title: 'ยุพิน | YouPin',
+            //       subtitle: desc,
+            //       item_url: `http://youpin.city/pins/${pinId}`,
+            //       image_url: context.photos[0]
+            //     }]
+            //     m.sendGeneric(userid, elements);
+            //     context = {};
+            //     conversation.updateContext(userid, context);
+            //   }
+            // );
           } else {
             context.lastSent = (new Date()).getTime();
             if (!context.isEnglish) {

@@ -4,6 +4,8 @@ const bodyParser = require('body-parser');
 const config = require('config');
 const express = require('express');
 const xhub = require('express-x-hub');
+const https = require('https');
+const LEX = require('letsencrypt-express');
 
 const APP_SECRET = (process.env.MESSENGER_APP_SECRET) ?
   process.env.MESSENGER_APP_SECRET :
@@ -55,10 +57,11 @@ const conversation = require('./conversation.js')(config.get('sessionMaxLength')
 // Youpin API utils
 const api_lib = require('./youpin-api.js');
 var youpin;
-new api_lib(API_URI, API_USERNAME, API_PASSWORD).then(function(api) {
-  // Youpin bot
-  youpin = require('./youpin.js')(m, api, conversation, API_USER_ID);
-});
+// new api_lib(API_URI, API_USERNAME, API_PASSWORD).then(function(api) {
+//   // Youpin bot
+//   youpin = require('./youpin.js')(m, api, conversation, API_USER_ID);
+// });
+youpin = require('./youpin.js')(m, null, conversation, API_USER_ID);
 
 // Index route
 app.get('/', function (req, res) {
@@ -69,7 +72,7 @@ app.get('/', function (req, res) {
 // Webhook verification
 app.get('/webhook/', function (req, res) {
   if (req.query['hub.mode'] === 'subscribe' &&
-    req.query['hub.verify_token'] === 'youpin.city.bot.token') {
+    req.query['hub.verify_token'] === 'folkrice_verification_token') {
     res.status(200).send(req.query['hub.challenge']);
   }
   res.sendStatus(403);
@@ -104,7 +107,31 @@ app.post('/webhook/', function(req, res) {
   }
 });
 
-
-app.listen(app.get('port'), function() {
-  console.log(`Node app is running on port ${app.get('port')}`);
+var lex = LEX.create({
+  configDir: '/etc/letsencrypt'
+  , letsencrypt: null
+  , approveRegistration: function (hostname, cb) {
+    cb(null, {
+      domains: ['e-nihongo.com']
+      , email: 'info@e-nihongo.com'
+      , agreeTos: true
+    });
+  }
 });
+
+// app.use(function *() {
+//   this.body = 'Hello World';
+// });
+
+lex.onRequest = app;
+
+lex.listen([], [5001], function () {
+  var protocol = ('requestCert' in this) ? 'https': 'http';
+  console.log("Listening at " + protocol + '://localhost:' + this.address().port);
+});
+
+https.createServer(lex.httpsOptions, LEX.createAcmeResponder(lex, app)).listen(5000);
+
+// app.listen(app.get('port'), function() {
+//   console.log(`Node app is running on port ${app.get('port')}`);
+// });

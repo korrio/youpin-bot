@@ -16,6 +16,7 @@
     "eslint-plugin-react": "^5.2.2",
     "express": "^4.14.0",
     "express-x-hub": "^1.0.4",
+    "letsencrypt-express": "^1.1.5",
     "feathers": "^2.0.1",
     "feathers-authentication": "^0.7.9",
     "feathers-hooks": "^1.5.4",
